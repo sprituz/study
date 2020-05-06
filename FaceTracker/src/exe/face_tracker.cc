@@ -39,51 +39,100 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <FaceTracker/Tracker.h>
 #include <opencv/highgui.h>
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
 #include <iostream>
-//=============================================================================
-void Draw(cv::Mat &image,cv::Mat &shape,cv::Mat &con,cv::Mat &tri,cv::Mat &visi)
+using namespace cv;
+using namespace std;
+cv::Point pts[6];
+float xPts[6];
+float yPts[6];
+void CVtoGL()
 {
-  int i,n = shape.rows/2; cv::Point p1,p2; cv::Scalar c;
+    
+    int w = 640;
+    int h = 480;
+    
+    //cout << endl;
+    for (int i = 0; i < 6; i++)
+    {
+        xPts[i] = (float)(pts[i].x - (float)w / 2.0) * 2.0;
+        yPts[i] = -(float)(pts[i].y - (float)h / 2.0) * 2.0;
+        //cout << xPts[i] << " " << yPts[i] << endl;
+    }
+    //cout << endl;
+}
 
-  //draw triangulation
-  c = CV_RGB(0,0,0);
-  for(i = 0; i < tri.rows; i++){
-    if(visi.at<int>(tri.at<int>(i,0),0) == 0 ||
-       visi.at<int>(tri.at<int>(i,1),0) == 0 ||
-       visi.at<int>(tri.at<int>(i,2),0) == 0)continue;
-    p1 = cv::Point(shape.at<double>(tri.at<int>(i,0),0),
-		   shape.at<double>(tri.at<int>(i,0)+n,0));
-    p2 = cv::Point(shape.at<double>(tri.at<int>(i,1),0),
-		   shape.at<double>(tri.at<int>(i,1)+n,0));
-    cv::line(image,p1,p2,c);
-    p1 = cv::Point(shape.at<double>(tri.at<int>(i,0),0),
-		   shape.at<double>(tri.at<int>(i,0)+n,0));
-    p2 = cv::Point(shape.at<double>(tri.at<int>(i,2),0),
-		   shape.at<double>(tri.at<int>(i,2)+n,0));
-    cv::line(image,p1,p2,c);
-    p1 = cv::Point(shape.at<double>(tri.at<int>(i,2),0),
-		   shape.at<double>(tri.at<int>(i,2)+n,0));
-    p2 = cv::Point(shape.at<double>(tri.at<int>(i,1),0),
-		   shape.at<double>(tri.at<int>(i,1)+n,0));
-    cv::line(image,p1,p2,c);
-  }
-  //draw connections
-  c = CV_RGB(0,0,255);
-  for(i = 0; i < con.cols; i++){
-    if(visi.at<int>(con.at<int>(0,i),0) == 0 ||
-       visi.at<int>(con.at<int>(1,i),0) == 0)continue;
-    p1 = cv::Point(shape.at<double>(con.at<int>(0,i),0),
-		   shape.at<double>(con.at<int>(0,i)+n,0));
-    p2 = cv::Point(shape.at<double>(con.at<int>(1,i),0),
-		   shape.at<double>(con.at<int>(1,i)+n,0));
-    cv::line(image,p1,p2,c,1);
-  }
-  //draw points
-  for(i = 0; i < n; i++){    
-    if(visi.at<int>(i,0) == 0)continue;
-    p1 = cv::Point(shape.at<double>(i,0),shape.at<double>(i+n,0));
-    c = CV_RGB(255,0,0); cv::circle(image,p1,2,c);
-  }return;
+//=============================================================================
+void Draw(cv::Mat &image, cv::Mat &shape, cv::Mat &con, cv::Mat &tri, cv::Mat &visi)
+{ //Draw(im,model._shape,con,tri,model._clm._visi[idx]);
+    //image:출력될 곳, shape:현재 이미지, visi:Visibility for each view(벡터)
+    int i, n = shape.rows / 2;
+    cv::Point p1, p2;
+    cv::Scalar c;
+    
+    int pts_count = 0;
+    int mouth_cnt = 0;
+    //draw triangulation
+    c = CV_RGB(0, 0, 0); //검정선
+    for (i = 0; i < tri.rows; i++)
+    {
+        if (visi.at<int>(tri.at<int>(i, 0), 0) == 0 ||
+            visi.at<int>(tri.at<int>(i, 1), 0) == 0 ||
+            visi.at<int>(tri.at<int>(i, 2), 0) == 0)
+            continue;
+        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 0), 0),
+                       shape.at<double>(tri.at<int>(i, 0) + n, 0));
+        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
+                       shape.at<double>(tri.at<int>(i, 1) + n, 0));
+        cv::line(image, p1, p2, c);
+        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 0), 0),
+                       shape.at<double>(tri.at<int>(i, 0) + n, 0));
+        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 2), 0),
+                       shape.at<double>(tri.at<int>(i, 2) + n, 0));
+        cv::line(image, p1, p2, c);
+        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 2), 0),
+                       shape.at<double>(tri.at<int>(i, 2) + n, 0));
+        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
+                       shape.at<double>(tri.at<int>(i, 1) + n, 0));
+        cv::line(image, p1, p2, c);
+    }
+    //draw connections
+    c = CV_RGB(0, 0, 255); //파란선
+    for (i = 0; i < con.cols; i++)
+    {
+        if (visi.at<int>(con.at<int>(0, i), 0) == 0 || visi.at<int>(con.at<int>(1, i), 0) == 0)
+            continue;
+        p1 = cv::Point(shape.at<double>(con.at<int>(0, i), 0),
+                       shape.at<double>(con.at<int>(0, i) + n, 0));
+        p2 = cv::Point(shape.at<double>(con.at<int>(1, i), 0),
+                       shape.at<double>(con.at<int>(1, i) + n, 0));
+        cv::line(image, p1, p2, c, 1);
+    }
+    //draw points
+    for (i = 0; i < n; i++)
+    {
+        if (visi.at<int>(i, 0) == 0)
+            continue;
+        //
+        p1 = cv::Point(shape.at<double>(i, 0), shape.at<double>(i + n, 0));
+        c = CV_RGB(255, 0, 0); //빨간 원
+        cv::circle(image, p1, 2, c);
+        //cv::putText(image,std::to_string(i),p1,CV_FONT_HERSHEY_COMPLEX,0.5,c); //인덱싱
+        if (i == 60 || i == 61 || i == 62 || i == 63 || i == 64 || i == 65)
+        {
+            pts[pts_count++] = p1;
+            c = CV_RGB(0, 0, 0);
+            cv::putText(image, std::to_string(i), p1, CV_FONT_HERSHEY_COMPLEX, 0.5, c);
+        }
+    }
+    
+    CVtoGL();
+    //영역의 크기 구하기
+    c = CV_RGB(255, 0, 0);
+    cv::fillConvexPoly(image, pts, 6, c);
+    
+    return;
 }
 //=============================================================================
 int parse_cmd(int argc, const char** argv,
