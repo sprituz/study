@@ -74,41 +74,6 @@ void Draw(cv::Mat &image, cv::Mat &shape, cv::Mat &con, cv::Mat &tri, cv::Mat &v
     int pts_count = 0;
     int mouth_cnt = 0;
     //draw triangulation
-    c = CV_RGB(0, 0, 0); //검정선
-    for (i = 0; i < tri.rows; i++)
-    {
-        if (visi.at<int>(tri.at<int>(i, 0), 0) == 0 ||
-            visi.at<int>(tri.at<int>(i, 1), 0) == 0 ||
-            visi.at<int>(tri.at<int>(i, 2), 0) == 0)
-            continue;
-        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 0), 0),
-                       shape.at<double>(tri.at<int>(i, 0) + n, 0));
-        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
-                       shape.at<double>(tri.at<int>(i, 1) + n, 0));
-        cv::line(image, p1, p2, c);
-        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 0), 0),
-                       shape.at<double>(tri.at<int>(i, 0) + n, 0));
-        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 2), 0),
-                       shape.at<double>(tri.at<int>(i, 2) + n, 0));
-        cv::line(image, p1, p2, c);
-        p1 = cv::Point(shape.at<double>(tri.at<int>(i, 2), 0),
-                       shape.at<double>(tri.at<int>(i, 2) + n, 0));
-        p2 = cv::Point(shape.at<double>(tri.at<int>(i, 1), 0),
-                       shape.at<double>(tri.at<int>(i, 1) + n, 0));
-        cv::line(image, p1, p2, c);
-    }
-    //draw connections
-    c = CV_RGB(0, 0, 255); //파란선
-    for (i = 0; i < con.cols; i++)
-    {
-        if (visi.at<int>(con.at<int>(0, i), 0) == 0 || visi.at<int>(con.at<int>(1, i), 0) == 0)
-            continue;
-        p1 = cv::Point(shape.at<double>(con.at<int>(0, i), 0),
-                       shape.at<double>(con.at<int>(0, i) + n, 0));
-        p2 = cv::Point(shape.at<double>(con.at<int>(1, i), 0),
-                       shape.at<double>(con.at<int>(1, i) + n, 0));
-        cv::line(image, p1, p2, c, 1);
-    }
     //draw points
     for (i = 0; i < n; i++)
     {
@@ -117,13 +82,10 @@ void Draw(cv::Mat &image, cv::Mat &shape, cv::Mat &con, cv::Mat &tri, cv::Mat &v
         //
         p1 = cv::Point(shape.at<double>(i, 0), shape.at<double>(i + n, 0));
         c = CV_RGB(255, 0, 0); //빨간 원
-        cv::circle(image, p1, 2, c);
         //cv::putText(image,std::to_string(i),p1,CV_FONT_HERSHEY_COMPLEX,0.5,c); //인덱싱
         if (i == 60 || i == 61 || i == 62 || i == 63 || i == 64 || i == 65)
         {
             pts[pts_count++] = p1;
-            c = CV_RGB(0, 0, 0);
-            cv::putText(image, std::to_string(i), p1, CV_FONT_HERSHEY_COMPLEX, 0.5, c);
         }
     }
     
